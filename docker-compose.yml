@@ -1,0 +1,83 @@
+﻿version: '3.8'
+
+services:
+  agent:
+    build:
+      context: ../senior-research-agent
+      dockerfile: docker/Dockerfile
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+      - chroma
+      - neo4j
+    networks:
+      - sra-network
+
+  chroma:
+    image: chromadb/chroma:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - sra-network
+
+  neo4j:
+    image: neo4j:5-community
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD:-password}
+    volumes:
+      - neo4j_data:/data
+    networks:
+      - sra-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - sra-network
+
+  api:
+    build:
+      context: ../sra-interface/api
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      - agent
+      - redis
+    networks:
+      - sra-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    networks:
+      - sra-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    networks:
+      - sra-network
+
+volumes:
+  chroma_data:
+  neo4j_data:
+
+networks:
+  sra-network:
+    driver: bridge
