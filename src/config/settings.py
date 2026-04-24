@@ -1,3 +1,4 @@
 class Settings:
-    openai_api_key = None
-    anthropic_api_key = None
+    qwen_api_key = None
+    qwen_model = 'qwen-max'
+    redis_url = 'redis://localhost:6379'
