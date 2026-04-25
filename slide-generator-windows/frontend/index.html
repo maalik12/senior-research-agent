@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Slide Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-section:hover {
+            border-color: #764ba2;
+            background: #f8f9ff;
+        }
+
+        .upload-section.dragover {
+            background: #e8eaff;
+            border-color: #764ba2;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .template-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .template-card:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .template-card.selected {
+            border-color: #667eea;
+            background: #f0f3ff;
+        }
+
+        .template-preview {
+            height: 80px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .slides-container {
+            margin-top: 30px;
+        }
+
+        .slide-editor {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: #fafafa;
+        }
+
+        .slide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .slide-number {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Academic Slide Generator</h1>
+            <p>Transform your research documents into professional presentations instantly</p>
+        </div>
+
+        <div class="main-content">
+            <div id="alertContainer"></div>
+
+            <!-- Upload Section -->
+            <div class="upload-section" id="dropZone">
+                <div class="upload-icon">📄</div>
+                <h3>Upload Your Academic Document</h3>
+                <p>Drag and drop your PDF file here or click to browse</p>
+                <input type="file" id="fileInput" accept=".pdf" style="display: none;">
+                <button class="btn" onclick="document.getElementById('fileInput').click()">
+                    Choose File
+                </button>
+            </div>
+
+            <!-- Template Selection -->
+            <div id="templateSection" class="hidden">
+                <h2 style="margin-bottom: 20px;">Choose Presentation Style</h2>
+                <div class="template-grid" id="templateGrid">
+                    <!-- Templates will be loaded here -->
+                </div>
+
+                <div class="form-group">
+                    <label for="fontSize">Font Size</label>
+                    <select id="fontSize" class="form-control">
+                        <option value="14">Small (14pt)</option>
+                        <option value="18" selected>Medium (18pt)</option>
+                        <option value="24">Large (24pt)</option>
+                        <option value="32">Extra Large (32pt)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Slide Editor -->
+            <div id="slideEditorSection" class="hidden">
+                <h2 style="margin-bottom: 20px;">Edit Your Slides</h2>
+                <div id="slidesContainer" class="slides-container">
+                    <!-- Slide editors will be added here -->
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn btn-secondary" onclick="addNewSlide()">+ Add New Slide</button>
+                    <button class="btn" id="generateBtn" onclick="generatePresentation()">
+                        🚀 Generate Presentation
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingSection" class="hidden loading">
+                <div class="spinner"></div>
+                <h3>Generating your presentation...</h3>
+                <p>This may take a moment</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let extractedSlides = [];
+        let selectedTemplate = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTemplates();
+            setupDragDrop();
+            setupFileInput();
+        });
+
+        function setupDragDrop() {
+            const dropZone = document.getElementById('dropZone');
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.add('dragover');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.remove('dragover');
+                });
+            });
+
+            dropZone.addEventListener('drop', handleDrop);
+        }
+
+        function setupFileInput() {
+            document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type === 'application/pdf') {
+                    analyzeDocument(file);
+                } else {
+                    showAlert('Please upload a PDF file', 'error');
+                }
+            }
+        }
+
+        async function analyzeDocument(file) {
+            showLoading(true);
+            
+            const formData = new FormData();
+            formData.append('document', file);
+
+            try {
+                const response = await fetch(`${API_BASE}/analyze`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    extractedSlides = data.extracted_points;
+                    displayTemplates();
+                    displaySlideEditors();
+                    showAlert(`Successfully extracted ${extractedSlides.length} slides from your document!`, 'success');
+                } else {
+                    showAlert(data.error || 'Failed to analyze document', 'error');
+                }
+            } catch (error) {
+                showAlert('Error connecting to server. Make sure the backend is running.', 'error');
+                console.error('Error:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function loadTemplates() {
+            try {
+                const response = await fetch(`${API_BASE}/templates`);
+                const data = await response.json();
+                window.templates = data.templates;
+            } catch (error) {
+                console.error('Error loading templates:', error);
+            }
+        }
+
+        function displayTemplates() {
+            const templateGrid = document.getElementById('templateGrid');
+            const templateSection = document.getElementById('templateSection');
+            
+            templateGrid.innerHTML = '';
+            
+            window.templates.forEach((template, index) => {
+                const card = document.createElement('div');
+                card.className = 'template-card';
+                card.onclick = () => selectTemplate(template.id);
+                
+                card.innerHTML = `
+                    <div class="template-preview" style="background: #${template.background_color};"></div>
+                    <h4>${template.name}</h4>
+                    <p style="font-size: 0.9em; color: #666;">${template.description}</p>
+                `;
+                
+                templateGrid.appendChild(card);
+            });
+            
+            templateSection.classList.remove('hidden');
+        }
+
+        function selectTemplate(templateId) {
+            selectedTemplate = window.templates.find(t => t.id === templateId);
+            
+            document.querySelectorAll('.template-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            event.currentTarget.classList.add('selected');
+        }
+
+        function displaySlideEditors() {
+            const container = document.getElementById('slidesContainer');
+            const editorSection = document.getElementById('slideEditorSection');
+            
+            container.innerHTML = '';
+            
+            extractedSlides.forEach((slide, index) => {
+                const slideEditor = createSlideEditor(slide, index);
+                container.appendChild(slideEditor);
+            });
+            
+            editorSection.classList.remove('hidden');
+        }
+
+        function createSlideEditor(slide, index) {
+            const div = document.createElement('div');
+            div.className = 'slide-editor';
+            div.innerHTML = `
+                <div class="slide-header">
+                    <span class="slide-number">Slide ${index + 1}</span>
+                    <button class="btn btn-secondary" onclick="removeSlide(${index})" style="padding: 5px 15px; font-size: 0.8em;">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" class="form-control slide-title" value="${escapeHtml(slide.slide_title)}">
+                </div>
+                <div class="form-group">
+                    <label>Content</label>
+                    <textarea class="form-control slide-content" rows="4">${escapeHtml(slide.content)}</textarea>
+                </div>
+            `;
+            return div;
+        }
+
+        function addNewSlide() {
+            const container = document.getElementById('slidesContainer');
+            const index = extractedSlides.length;
+            
+            const newSlide = {
+                slide_title: `New Slide ${index + 1}`,
+                content: 'Add your content here...'
+            };
+            
+            extractedSlides.push(newSlide);
+            const slideEditor = createSlideEditor(newSlide, index);
+            container.appendChild(slideEditor);
+        }
+
+        function removeSlide(index) {
+            extractedSlides.splice(index, 1);
+            refreshSlideEditors();
+        }
+
+        function refreshSlideEditors() {
+            const container = document.getElementById('slidesContainer');
+            container.innerHTML = '';
+            
+            extractedSlides.forEach((slide, index) => {
+                const slideEditor = createSlideEditor(slide, index);
+                container.appendChild(slideEditor);
+            });
+        }
+
+        async function generatePresentation() {
+            if (!selectedTemplate) {
+                showAlert('Please select a template style', 'error');
+                return;
+            }
+
+            // Collect slide data from editors
+            const slidesData = [];
+            document.querySelectorAll('.slide-editor').forEach(editor => {
+                const title = editor.querySelector('.slide-title').value;
+                const content = editor.querySelector('.slide-content').value;
+                slidesData.push({ title, content });
+            });
+
+            if (slidesData.length === 0) {
+                showAlert('No slides to generate', 'error');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const response = await fetch(`${API_BASE}/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        slides: slidesData,
+                        background_color: selectedTemplate.background_color,
+                        font_size: parseInt(document.getElementById('fontSize').value)
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'academic_presentation.pptx';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    showAlert('Presentation generated successfully!', 'success');
+                } else {
+                    const error = await response.json();
+                    showAlert(error.error || 'Failed to generate presentation', 'error');
+                }
+            } catch (error) {
+                showAlert('Error generating presentation. Make sure the backend is running.', 'error');
+                console.error('Error:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function showLoading(show) {
+            const loadingSection = document.getElementById('loadingSection');
+            const generateBtn = document.getElementById('generateBtn');
+            
+            if (show) {
+                loadingSection.classList.remove('hidden');
+                if (generateBtn) generateBtn.disabled = true;
+            } else {
+                loadingSection.classList.add('hidden');
+                if (generateBtn) generateBtn.disabled = false;
+            }
+        }
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            
+            container.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
