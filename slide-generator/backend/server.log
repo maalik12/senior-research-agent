@@ -1,0 +1,12 @@
+nohup: ignoring input
+ * Serving Flask app 'main'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://21.0.9.82:5001
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 450-101-217
+127.0.0.1 - - [25/Apr/2026 16:22:43] "GET /health HTTP/1.1" 200 -
