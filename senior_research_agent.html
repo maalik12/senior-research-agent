@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Senior Research Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com ">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --bg2: #161616;
+    --bg3: #1e1e1e;
+    --bg4: #252525;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #e8e6e0;
+    --text2: #9a9790;
+    --text3: #5e5c58;
+    --accent: #c8a96e;
+    --accent2: #8db49a;
+    --accent3: #7b96c4;
+    --danger: #c4706a;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --serif: 'Playfair Display', serif;
+    --radius: 6px;
+    --radius-lg: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 52px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    flex-shrink: 0;
+    gap: 12px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand-icon {
+    width: 28px; height: 28px;
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+  .brand-name {
+    font-family: var(--serif);
+    font-size: 15px;
+    color: var(--text);
+    letter-spacing: 0.2px;
+  }
+  .brand-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent2);
+    transition: background 0.3s;
+  }
+  .status-dot.busy { background: var(--accent); animation: pulse 1s infinite; }
+  .status-dot.error { background: var(--danger); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .status-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.5px;
+  }
+  .mode-tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2px;
+  }
+  .mode-tab {
+    padding: 4px 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    color: var(--text3);
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    transition: all 0.15s;
+  }
+  .mode-tab.active {
+    background: var(--bg4);
+    color: var(--accent);
+    border: 1px solid var(--border2);
+  }
+  .mode-tab:hover:not(.active) { color: var(--text2); }
+
+  /* ── LAYOUT ── */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px;
+    border-right: 1px solid var(--border);
+    background: var(--bg2);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
+  .sidebar-section {
+    padding: 14px 14px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+  .upload-zone {
+    border: 1px dashed var(--border2);
+    border-radius: var(--radius);
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .upload-zone:hover { border-color: var(--accent); background: rgba(200,169,110,0.04); }
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+  .upload-icon {
+    font-size: 18px;
+    margin-bottom: 4px;
+    color: var(--text3);
+  }
+  .upload-text {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    line-height: 1.4;
+  }
+  .doc-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+  .doc-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    background: var(--bg3);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    font-size: 11px;
+    position: relative;
+  }
+  .doc-icon { color: var(--accent3); font-size: 12px; flex-shrink: 0; }
+  .doc-name { color: var(--text2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); font-size: 10px; }
+  .doc-remove { color: var(--text3); cursor: pointer; font-size: 12px; flex-shrink: 0; line-height: 1; }
+  .doc-remove:hover { color: var(--danger); }
+
+  .search-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+  }
+  .toggle-label { font-size: 12px; color: var(--text2); }
+  .toggle {
+    width: 32px; height: 18px;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    border-radius: 9px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle.on { background: var(--accent2); border-color: var(--accent2); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: white;
+    top: 2px; left: 2px;
+    transition: transform 0.2s;
+  }
+  .toggle.on::after { transform: translateX(14px); }
+
+  .prompt-list { display: flex; flex-direction: column; gap: 4px; }
+  .prompt-item {
+    padding: 7px 9px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text2);
+    cursor: pointer;
+    line-height: 1.4;
+    transition: all 0.15s;
+  }
+  .prompt-item:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
+
+  .context-box {
+    padding: 8px 10px;
+    background: var(--bg3);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    line-height: 1.6;
+  }
+
+  /* ── CHAT AREA ── */
+  .chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+  }
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    scroll-behavior: smooth;
+  }
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 12px;
+    padding: 40px;
+    color: var(--text3);
+  }
+  .empty-glyph {
+    font-family: var(--serif);
+    font-size: 48px;
+    color: var(--bg4);
+    margin-bottom: 4px;
+  }
+  .empty-title {
+    font-family: var(--serif);
+    font-size: 18px;
+    color: var(--text2);
+    font-weight: 400;
+  }
+  .empty-sub {
+    font-size: 12px;
+    color: var(--text3);
+    max-width: 360px;
+    line-height: 1.7;
+  }
+
+  /* ── MESSAGE BUBBLES ── */
+  .msg-wrapper {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+  }
+  .msg-wrapper.user { align-items: flex-end; }
+  .msg-wrapper.assistant { align-items: flex-start; }
+
+  .msg-meta {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    color: var(--text3);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .msg-wrapper.user .msg-meta { text-align: right; }
+
+  .msg-bubble {
+    max-width: 84%;
+    padding: 12px 16px;
+    border-radius: var(--radius-lg);
+    font-size: 13px;
+    line-height: 1.75;
+  }
+  .msg-wrapper.user .msg-bubble {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-bottom-right-radius: 2px;
+    color: var(--text);
+  }
+  .msg-wrapper.assistant .msg-bubble {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 2px;
+    color: var(--text);
+    max-width: 92%;
+  }
+
+  /* Markdown rendering */
+  .msg-bubble h1,.msg-bubble h2,.msg-bubble h3 {
+    font-family: var(--serif);
+    font-weight: 400;
+    color: var(--text);
+    margin: 14px 0 6px;
+  }
+  .msg-bubble h1 { font-size: 17px; }
+  .msg-bubble h2 { font-size: 15px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+  .msg-bubble h3 { font-size: 13px; color: var(--accent); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+  .msg-bubble p { margin: 0 0 8px; }
+  .msg-bubble p:last-child { margin: 0; }
+  .msg-bubble ul,.msg-bubble ol { padding-left: 18px; margin: 6px 0 10px; }
+  .msg-bubble li { margin-bottom: 4px; }
+  .msg-bubble strong { font-weight: 600; color: var(--text); }
+  .msg-bubble em { color: var(--text2); font-style: italic; }
+  .msg-bubble code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--bg4);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--accent3);
+  }
+  .msg-bubble pre {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    overflow-x: auto;
+    margin: 10px 0;
+  }
+  .msg-bubble pre code { background: none; padding: 0; color: var(--text2); }
+  .msg-bubble blockquote {
+    border-left: 2px solid var(--accent);
+    padding: 4px 0 4px 14px;
+    margin: 10px 0;
+    color: var(--text2);
+    font-style: italic;
+  }
+  .msg-bubble table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin: 10px 0;
+  }
+  .msg-bubble th {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border2);
+    padding: 6px 10px;
+    text-align: left;
+  }
+  .msg-bubble td {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text2);
+  }
+  .msg-bubble hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 12px 0;
+  }
+
+  /* Thinking indicator */
+  .thinking {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    border-bottom-left-radius: 2px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    max-width: 200px;
+    margin-bottom: 20px;
+  }
+  .thinking-dots span {
+    display: inline-block;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-right: 2px;
+    animation: blink 1.2s infinite;
+  }
+  .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  /* Search badge */
+  .search-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent3);
+    background: rgba(123,150,196,0.1);
+    border: 1px solid rgba(123,150,196,0.2);
+    border-radius: 3px;
+    padding: 2px 7px;
+    margin-bottom: 6px;
+  }
+  .doc-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent2);
+    background: rgba(141,180,154,0.1);
+    border: 1px solid rgba(141,180,154,0.2);
+    border-radius: 3px;
+    padding: 2px 7px;
+    margin-bottom: 6px;
+    margin-right: 4px;
+  }
+
+  /* ── OUTPUT MODE PANEL ── */
+  .output-panel {
+    display: none;
+    border-left: 1px solid var(--border);
+    width: 380px;
+    flex-shrink: 0;
+    background: var(--bg2);
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .output-panel.visible { display: flex; }
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .output-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+  .output-close {
+    font-size: 14px;
+    color: var(--text3);
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: var(--text3);
+    line-height: 1;
+  }
+  .output-close:hover { color: var(--danger); }
+  .output-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--text);
+  }
+  .output-content h1,.output-content h2,.output-content h3 {
+    font-family: var(--serif);
+    font-weight: 400;
+    color: var(--text);
+    margin: 16px 0 6px;
+  }
+  .output-content h1 { font-size: 20px; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 12px; }
+  .output-content h2 { font-size: 15px; color: var(--accent); }
+  .output-content h3 { font-size: 12px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.5px; }
+  .output-content p { margin-bottom: 10px; color: var(--text2); }
+  .output-content ul,.output-content ol { padding-left: 18px; margin-bottom: 10px; color: var(--text2); }
+  .output-content li { margin-bottom: 4px; }
+  .output-content strong { color: var(--text); font-weight: 600; }
+  .output-content hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+  .output-content blockquote {
+    border-left: 2px solid var(--accent);
+    padding: 4px 0 4px 14px;
+    margin: 10px 0;
+    color: var(--text3);
+    font-style: italic;
+    font-size: 12px;
+  }
+  .output-actions {
+    display: flex;
+    gap: 6px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .out-btn {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    background: var(--bg3);
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .out-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(200,169,110,0.05); }
+
+  /* ── INPUT BAR ── */
+  .inputbar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 20px 14px;
+    border-top: 1px solid var(--border);
+    background: var(--bg2);
+    flex-shrink: 0;
+  }
+  .input-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+  #chat-input {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text);
+    resize: none;
+    min-height: 40px;
+    max-height: 140px;
+    line-height: 1.5;
+    transition: border-color 0.15s;
+  }
+  #chat-input:focus { outline: none; border-color: var(--accent); }
+  #chat-input::placeholder { color: var(--text3); }
+  .send-btn {
+    width: 40px; height: 40px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    color: var(--text2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .send-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .send-btn svg { width: 16px; height: 16px; }
+
+  .input-toolbar {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .tool-btn {
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text3);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .tool-btn:hover { border-color: var(--border2); color: var(--text2); }
+  .tool-btn.active { border-color: var(--accent3); color: var(--accent3); background: rgba(123,150,196,0.08); }
+  .char-count {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-icon">SR</div>
+    <div>
+      <div class="brand-name">Senior Research Agent</div>
+      <div class="brand-sub">Anthropic · claude-sonnet-4</div>
+    </div>
+  </div>
+  <div class="mode-tabs">
+    <button class="mode-tab active" onclick="setMode('chat')" id="tab-chat">Chat</button>
+    <button class="mode-tab" onclick="setMode('report')" id="tab-report">Report</button>
+    <button class="mode-tab" onclick="setMode('review')" id="tab-review">Lit Review</button>
+  </div>
+  <div class="topbar-right">
+    <div class="status-dot" id="status-dot"></div>
+    <div class="status-label" id="status-label">ready</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- Documents -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Documents</div>
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="file-input" accept=".pdf,.txt,.md,.docx" multiple onchange="handleFiles(event)">
+        <div class="upload-icon">📄</div>
+        <div class="upload-text">Drop PDFs or text files<br>here to upload</div>
+      </div>
+      <div class="doc-list" id="doc-list"></div>
+    </div>
+
+    <!-- Web Search -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Web Search</div>
+      <div class="search-toggle">
+        <span class="toggle-label">Search the web</span>
+        <div class="toggle on" id="search-toggle" onclick="toggleSearch()"></div>
+      </div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:4px;line-height:1.5">
+        When on, agent uses live web search for current literature and news.
+      </div>
+    </div>
+
+    <!-- Quick Prompts -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Quick prompts</div>
+      <div class="prompt-list">
+        <div class="prompt-item" onclick="usePrompt(this)">What are the main financial risks in CCS value chains?</div>
+        <div class="prompt-item" onclick="usePrompt(this)">Critique the CCfD mechanism for CCS deployment in the North Sea</div>
+        <div class="prompt-item" onclick="usePrompt(this)">Suggest a qualitative methodology for a CCS stakeholder study</div>
+        <div class="prompt-item" onclick="usePrompt(this)">What is the latest on Northern Lights Phase 2?</div>
+        <div class="prompt-item" onclick="usePrompt(this)">Draft three research questions on CO₂ transport regulation</div>
+        <div class="prompt-item" onclick="usePrompt(this)">Summarise the uploaded document and identify key arguments</div>
+      </div>
+    </div>
+
+    <!-- Context -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Agent context</div>
+      <div class="context-box">
+        Domain: CCS policy, North Sea energy transitions, industrial decarbonisation<br><br>
+        Affiliation: NTNU / SINTEF<br><br>
+        Outputs: chat · structured report · literature review
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CHAT AREA -->
+  <div class="chat-area">
+    <div class="messages" id="messages">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-glyph">✦</div>
+        <div class="empty-title">Senior Research Agent</div>
+        <div class="empty-sub">Ask a research question, request a literature review, upload documents for analysis, or switch to Report mode to generate a structured output. Web search is enabled by default.</div>
+      </div>
+    </div>
+
+    <!-- Input bar -->
+    <div class="inputbar">
+      <div class="input-row">
+        <textarea id="chat-input" placeholder="Ask a research question, request a summary, or describe what you need..." rows="1"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Send (Enter)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+      <div class="input-toolbar">
+        <button class="tool-btn" id="btn-search" onclick="toggleSearch()">
+          <span>🔍</span> Web search
+        </button>
+        <button class="tool-btn" onclick="triggerUpload()">
+          <span>📎</span> Attach doc
+        </button>
+        <button class="tool-btn" onclick="clearConversation()">
+          <span>↺</span> Clear
+        </button>
+        <div class="char-count" id="char-count"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OUTPUT PANEL -->
+  <div class="output-panel" id="output-panel">
+    <div class="output-header">
+      <div class="output-title" id="output-panel-title">Report</div>
+      <button class="output-close" onclick="closeOutputPanel()">✕</button>
+    </div>
+    <div class="output-content" id="output-content"></div>
+    <div class="output-actions">
+      <button class="out-btn" onclick="copyOutput()">Copy text</button>
+      <button class="out-btn" onclick="downloadOutput()">Download .md</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SYSTEM_BASE = `You are a Senior Research Agent — a distinguished academic researcher and policy expert. You operate at the level of a tenured professor, senior policy advisor, and experienced peer reviewer combined.
+
+EXPERTISE:
+- Energy economics, climate finance, industrial decarbonisation policy
+- Carbon capture and storage (CCS): technology, policy, finance, governance, and the North Sea value chain
+- Academic literature across Energy Policy, IJGGC, Climate Policy, Energy Research & Social Science, and related journals
+- HK-dir Kanalregisteret journal ranking system (Norway)
+- Qualitative methods: case studies, thematic analysis (NVivo/ATLAS.ti), stakeholder interviews, MLP/socio-technical transitions frameworks, process tracing
+- Quantitative methods: real options analysis, Monte Carlo simulation, NPV/IRR modelling, econometrics
+
+BEHAVIOUR:
+- Intellectually rigorous and direct — you acknowledge uncertainty but don't hedge unnecessarily
+- Structure answers well: use markdown headings, bullet lists, tables, and blockquotes where they aid comprehension
+- When citing literature, use real, verifiable papers with author, journal, year, and volume where known
+- Proactively flag research gaps, methodological limitations, and alternative perspectives
+- You can: synthesise literature, critique arguments, design research methods, draft research questions, evaluate policy instruments, explain financial/economic models, and review documents
+- When asked to generate a Report or Literature Review (indicated by the mode tag), produce a comprehensive, well-structured document with proper sections, not just a chat response
+- If web search results are provided in the context, integrate them naturally and cite sources
+
+USER CONTEXT:
+Doctoral researcher, NTNU (Norwegian University of Science and Technology), Dept. of Industrial Economics and Technology Management. PhD focus: CCS policy design, risk sharing along the value chain, scaling from Mt to Gt level in the European North Sea. Supervisors: Prof. Verena Hagspiel-Janssen (NTNU), Simon Roussanaly (SINTEF Energy Research). Background: industrial economics and finance.
+
+TONE: Collegial and intellectually engaged — like a senior colleague in a research group, not a textbook narrator. Challenge ideas where appropriate. Engage with the substance.`;
+
+let history = [];
+let documents = [];
+let searchEnabled = true;
+let currentMode = 'chat';
+let isLoading = false;
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + mode).classList.add('active');
+}
+
+function toggleSearch() {
+  searchEnabled = !searchEnabled;
+  const tog = document.getElementById('search-toggle');
+  const btn = document.getElementById('btn-search');
+  tog.classList.toggle('on', searchEnabled);
+  btn.classList.toggle('active', searchEnabled);
+}
+
+function triggerUpload() {
+  document.getElementById('file-input').click();
+}
+
+function handleFiles(e) {
+  const files = Array.from(e.target.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const content = ev.target.result;
+      documents.push({ name: file.name, content: content.substring(0, 12000) });
+      renderDocList();
+    };
+    reader.readAsText(file);
+  });
+  e.target.value = '';
+}
+
+function renderDocList() {
+  const list = document.getElementById('doc-list');
+  list.innerHTML = '';
+  documents.forEach((doc, i) => {
+    const div = document.createElement('div');
+    div.className = 'doc-item';
+    div.innerHTML = `<span class="doc-icon">📄</span><span class="doc-name" title="${doc.name}">${doc.name}</span><span class="doc-remove" onclick="removeDoc(${i})">✕</span>`;
+    list.appendChild(div);
+  });
+}
+
+function removeDoc(i) {
+  documents.splice(i, 1);
+  renderDocList();
+}
+
+function usePrompt(el) {
+  document.getElementById('chat-input').value = el.textContent;
+  autoResize();
+}
+
+function clearConversation() {
+  history = [];
+  const msgs = document.getElementById('messages');
+  msgs.innerHTML = '<div class="empty-state" id="empty-state"><div class="empty-glyph">✦</div><div class="empty-title">Senior Research Agent</div><div class="empty-sub">Ask a research question, request a literature review, upload documents for analysis, or switch to Report mode to generate a structured output.</div></div>';
+  closeOutputPanel();
+}
+
+function setStatus(s) {
+  const dot = document.getElementById('status-dot');
+  const lbl = document.getElementById('status-label');
+  dot.className = 'status-dot' + (s === 'busy' ? ' busy' : s === 'error' ? ' error' : '');
+  lbl.textContent = s === 'busy' ? 'thinking...' : s === 'error' ? 'error' : 'ready';
+}
+
+function md(text) {
+  return text
+    .replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => `<pre><code>${code.replace(/</g,'&lt;')}</code></pre>`)
+    .replace(/^#{3} (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^#{2} (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^#{1} (.+)$/gm, '<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    .replace(/^---$/gm, '<hr>')
+    .replace(/^\| .+/gm, s => {
+      const cells = s.split('|').map(c=>c.trim()).filter(c=>c&&!c.match(/^[-:]+$/));
+      if (!cells.length) return '';
+      const isHeader = s.includes('---') || false;
+      return '<tr>' + cells.map(c=>`<td>${c}</td>`).join('') + '</tr>';
+    })
+    .replace(/(<tr>.*<\/tr>\n?)+/g, s => `<table>${s}</table>`)
+    .replace(/^[-*•] (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>[\s\S]*?<\/li>\n?)+/g, s => '<ul>' + s + '</ul>')
+    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/^(?!<[a-zA-Z\/])(.+)$/gm, m => m.trim() ? m : '')
+    .replace(/<p><\/p>/g, '');
+}
+
+function appendMsg(role, content, badges) {
+  const empty = document.getElementById('empty-state');
+  if (empty) empty.remove();
+
+  const msgs = document.getElementById('messages');
+  const wrapper = document.createElement('div');
+  wrapper.className = 'msg-wrapper ' + role;
+
+  const meta = document.createElement('div');
+  meta.className = 'msg-meta';
+  meta.textContent = role === 'assistant' ? 'SENIOR RESEARCHER' : 'YOU';
+  wrapper.appendChild(meta);
+
+  if (badges && badges.length) {
+    const badgeRow = document.createElement('div');
+    badgeRow.style.marginBottom = '4px';
+    badges.forEach(b => {
+      const span = document.createElement('span');
+      span.className = b.type === 'search' ? 'search-badge' : 'doc-badge';
+      span.textContent = b.label;
+      badgeRow.appendChild(span);
+    });
+    wrapper.appendChild(badgeRow);
+  }
+
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  if (role === 'assistant') {
+    bubble.innerHTML = md(content);
+  } else {
+    bubble.textContent = content;
+  }
+  wrapper.appendChild(bubble);
+  msgs.appendChild(wrapper);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showThinking() {
+  const msgs = document.getElementById('messages');
+  const empty = document.getElementById('empty-state');
+  if (empty) empty.remove();
+  const div = document.createElement('div');
+  div.id = 'thinking';
+  div.className = 'thinking';
+  div.innerHTML = '<div class="thinking-dots"><span></span><span></span><span></span></div><span style="font-family:var(--mono);font-size:11px;color:var(--text3)">Researching...</span>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeThinking() {
+  const t = document.getElementById('thinking');
+  if (t) t.remove();
+}
+
+function buildSystemPrompt() {
+  let sys = SYSTEM_BASE;
+  if (currentMode === 'report') {
+    sys += '\n\nOUTPUT MODE: STRUCTURED REPORT. Generate a comprehensive, well-formatted report with: Executive Summary, Background/Context, Main Analysis (with subsections), Key Findings, Implications, and Recommendations. Use markdown formatting throughout. Be thorough and detailed.';
+  } else if (currentMode === 'review') {
+    sys += '\n\nOUTPUT MODE: LITERATURE REVIEW. Generate a systematic literature review with: Introduction & Scope, Thematic Synthesis (organised by theme not by paper), Methodological Patterns, Research Gaps & Future Directions, and Conclusion. Cite real papers with author/year/journal. Use markdown formatting.';
+  }
+  return sys;
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || isLoading) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  isLoading = true;
+  setStatus('busy');
+  document.getElementById('send-btn').disabled = true;
+
+  const badges = [];
+  let userContent = text;
+
+  if (documents.length > 0) {
+    const docsContext = documents.map(d => `[Document: ${d.name}]\n${d.content}`).join('\n\n---\n\n');
+    userContent = `${text}\n\n---\n\nUploaded documents for reference:\n${docsContext}`;
+    documents.forEach(d => badges.push({ type: 'doc', label: '📄 ' + d.name }));
+  }
+
+  appendMsg('user', text, badges.length ? badges : null);
+  history.push({ role: 'user', content: userContent });
+
+  showThinking();
+
+  let tools = [];
+  if (searchEnabled) {
+    tools = [{ type: 'web_search_20250305', name: 'web_search' }];
+    badges.unshift({ type: 'search', label: '🔍 Web search on' });
+  }
+
+  try {
+    const body = {
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: buildSystemPrompt(),
+      messages: history
+    };
+    if (tools.length) body.tools = tools;
+
+    const res = await fetch(' https://api.anthropic.com/v1/messages ', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+    removeThinking();
+
+    const textBlocks = (data.content || []).filter(b => b.type === 'text');
+    const reply = textBlocks.map(b => b.text).join('\n') || 'I encountered an issue. Please try again.';
+
+    const usedSearch = (data.content || []).some(b => b.type === 'tool_use' || b.type === 'tool_result');
+    const finalBadges = [];
+    if (usedSearch || searchEnabled) finalBadges.push({ type: 'search', label: '🔍 Web search' });
+
+    history.push({ role: 'assistant', content: reply });
+    appendMsg('assistant', reply, finalBadges.length ? finalBadges : null);
+
+    if (currentMode === 'report' || currentMode === 'review') {
+      showOutputPanel(currentMode, reply);
+    }
+
+  } catch(e) {
+    removeThinking();
+    appendMsg('assistant', 'Connection error — please check your network and try again.');
+    setStatus('error');
+  }
+
+  isLoading = false;
+  setStatus('ready');
+  document.getElementById('send-btn').disabled = false;
+}
+
+function showOutputPanel(mode, content) {
+  const panel = document.getElementById('output-panel');
+  const title = document.getElementById('output-panel-title');
+  const oc = document.getElementById('output-content');
+  panel.classList.add('visible');
+  title.textContent = mode === 'report' ? 'Structured Report' : 'Literature Review';
+  oc.innerHTML = md(content);
+}
+
+function closeOutputPanel() {
+  document.getElementById('output-panel').classList.remove('visible');
+}
+
+function copyOutput() {
+  const text = document.getElementById('output-content').innerText;
+  navigator.clipboard.writeText(text).catch(() => {});
+}
+
+function downloadOutput() {
+  const text = document.getElementById('output-content').innerText;
+  const blob = new Blob([text], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'research-output-' + Date.now() + '.md';
+  a.click();
+}
+
+function autoResize() {
+  const t = document.getElementById('chat-input');
+  t.style.height = 'auto';
+  t.style.height = Math.min(t.scrollHeight, 140) + 'px';
+}
+
+document.getElementById('chat-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+document.getElementById('chat-input').addEventListener('input', () => {
+  autoResize();
+  const len = document.getElementById('chat-input').value.length;
+  document.getElementById('char-count').textContent = len > 0 ? len + ' chars' : '';
+});
+
+document.getElementById('upload-zone').addEventListener('dragover', e => {
+  e.preventDefault();
+  document.getElementById('upload-zone').style.borderColor = 'var(--accent)';
+});
+document.getElementById('upload-zone').addEventListener('dragleave', () => {
+  document.getElementById('upload-zone').style.borderColor = '';
+});
+document.getElementById('upload-zone').addEventListener('drop', e => {
+  e.preventDefault();
+  document.getElementById('upload-zone').style.borderColor = '';
+  const files = Array.from(e.dataTransfer.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      documents.push({ name: file.name, content: ev.target.result.substring(0, 12000) });
+      renderDocList();
+    };
+    reader.readAsText(file);
+  });
+});
+
+document.getElementById('btn-search').classList.add('active');
+</script>
+</body>
+</html>
